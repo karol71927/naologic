@@ -1,11 +1,77 @@
-import { Entity, ManyToOne, Property } from '@mikro-orm/mongodb';
-import { Product } from './product.model';
-import { BaseEntity } from '../../../../shared/mikro-orm/base-entity';
+import { Embeddable, Property } from '@mikro-orm/mongodb';
 
-@Entity()
-export class ProductVariant extends BaseEntity {
+@Embeddable()
+export class ProductVariant {
   @Property()
   itemId: number;
+
+  @Property()
+  available: boolean;
+
+  @Property()
+  attributes: any;
+
+  @Property()
+  cost: number;
+
+  @Property()
+  currency: 'USD' | 'EUR';
+
+  @Property({ nullable: true })
+  depth: number | null;
+
+  @Property({ nullable: true })
+  dimensionUom: number | null;
+
+  @Property({ nullable: true })
+  height: number | null;
+
+  @Property({ nullable: true })
+  width: number | null;
+
+  @Property()
+  manufacturerItemId: string;
+
+  @Property()
+  packaging: string;
+
+  @Property()
+  price: number;
+
+  @Property({ nullable: true })
+  volume: number;
+
+  @Property({ nullable: true })
+  volumeUom: number;
+
+  @Property({ nullable: true })
+  weight: number;
+
+  @Property({ nullable: true })
+  weightUom: number;
+
+  @Property()
+  optionName: string;
+
+  @Property()
+  optionsPath: string;
+
+  @Property()
+  optionItemsPath: string;
+
+  @Property()
+  sku: string;
+
+  @Property()
+  active: boolean;
+
+  @Property()
+  images: {
+    fileName: string;
+    cdnLink: string;
+    i: number;
+    alt: string | null;
+  }[];
 
   @Property()
   name: string;
@@ -25,22 +91,6 @@ export class ProductVariant extends BaseEntity {
   @Property()
   availability: string;
 
-  @Property({
-    nullable: true,
-  })
-  imageFileName: string;
-
-  @Property({
-    nullable: true,
-  })
-  imageURL: string;
-
-  @Property()
-  NDCItemCode: string;
-
-  @ManyToOne(() => Product)
-  product: Product;
-
   constructor(
     itemId: number,
     name: string,
@@ -49,13 +99,31 @@ export class ProductVariant extends BaseEntity {
     manufacturerItemCode: number,
     quantity: number,
     availability: string,
-    NDCItemCode: string,
-    image?: {
+    available: boolean,
+    attributes: any,
+    cost: number,
+    currency: 'USD' | 'EUR',
+    depth: number | null,
+    dimensionUom: number | null,
+    height: number | null,
+    width: number | null,
+    manufacturerItemId: string,
+    packaging: string,
+    price: number,
+    volume: number,
+    volumeUom: number,
+    weight: number,
+    weightUom: number,
+    optionName: string,
+    optionsPath: string,
+    optionItemsPath: string,
+    sku: string,
+    active: boolean,
+    images?: {
       name: string;
       url: string;
-    },
+    }[],
   ) {
-    super();
     this.itemId = itemId;
     this.name = name;
     this.description = description;
@@ -63,8 +131,33 @@ export class ProductVariant extends BaseEntity {
     this.manufacturerItemCode = manufacturerItemCode;
     this.quantity = quantity;
     this.availability = availability;
-    this.NDCItemCode = NDCItemCode;
-    this.imageURL = image?.url ?? null;
-    this.imageFileName = image?.name ?? null;
+    this.available = available;
+    this.attributes = attributes;
+    this.cost = cost;
+    this.currency = currency;
+    this.depth = depth;
+    this.dimensionUom = dimensionUom;
+    this.height = height;
+    this.width = width;
+    this.manufacturerItemId = manufacturerItemId;
+    this.packaging = packaging;
+    this.price = price;
+    this.volume = volume;
+    this.volumeUom = volumeUom;
+    this.weight = weight;
+    this.weightUom = weightUom;
+    this.optionName = optionName;
+    this.optionsPath = optionsPath;
+    this.optionItemsPath = optionItemsPath;
+    this.sku = sku;
+    this.active = active;
+    this.images = images.map((image, index) => {
+      return {
+        alt: null,
+        cdnLink: image.url,
+        fileName: image.name,
+        i: index,
+      };
+    });
   }
 }

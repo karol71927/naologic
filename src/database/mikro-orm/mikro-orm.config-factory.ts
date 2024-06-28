@@ -8,11 +8,8 @@ export const mikroOrmConfigFactory = (
   entities = [...productModuleEntities],
 ): MikroOrmModuleOptions => {
   const moduleOptions: MikroOrmModuleOptions = {
-    port: configService.get<number>('DB_PORT'),
-    user: configService.get<string>('DB_USER'),
-    password: configService.get<string>('DB_PASSWORD'),
     dbName: configService.get<string>('DB_NAME'),
-    clientUrl: `mongodb://${configService.get<string>('DB_HOST')}`,
+    clientUrl: `mongodb://${configService.get<string>('DB_USER')}:${configService.get<string>('DB_PASSWORD')}@${configService.get<string>('DB_HOST')}:${configService.get<number>('DB_PORT')}`,
     driver: MongoDriver,
     entities,
   };

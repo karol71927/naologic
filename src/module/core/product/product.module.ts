@@ -6,9 +6,11 @@ import { BullModule } from '@nestjs/bull';
 import { CREATE_PRODUCT_QUEUE_NAME } from './queue/create-product.queue-name';
 import { SpreadsheetModule } from '../../generic/spreadsheet/spreadsheet.module';
 import { CreateProductConsumer } from './consumer/create-product.consumer';
-import { ProductVariant } from './model/product-variant.model';
+import { ProductDescriptionGenerator } from './generator/product-description.generator';
+import { AddDescriptionToProductConsumer } from './consumer/add-description-to-product.consumer';
+import { OpenAiModule } from '../../generic/open-ai/open-ai.module';
 
-export const productModuleEntities = [Product, ProductVariant];
+export const productModuleEntities = [Product];
 
 @Module({
   imports: [
@@ -23,7 +25,13 @@ export const productModuleEntities = [Product, ProductVariant];
       },
     }),
     SpreadsheetModule,
+    OpenAiModule,
   ],
-  providers: [FetchProductsScheduler, CreateProductConsumer],
+  providers: [
+    FetchProductsScheduler,
+    CreateProductConsumer,
+    AddDescriptionToProductConsumer,
+    ProductDescriptionGenerator,
+  ],
 })
 export class ProductModule {}

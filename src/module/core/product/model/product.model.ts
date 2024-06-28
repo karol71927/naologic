@@ -1,8 +1,15 @@
-import { Collection, Entity, OneToMany, Property } from '@mikro-orm/mongodb';
+import {
+  Collection,
+  Embedded,
+  Entity,
+  OneToMany,
+  Property,
+} from '@mikro-orm/mongodb';
 import { ProductRepository } from '../repository/product.repository';
 import { ProductVariant } from './product-variant.model';
 import { BaseEntity } from '../../../../shared/mikro-orm/base-entity';
 import { nanoid } from 'nanoid';
+import { ProductOption } from './product-option.model';
 
 @Entity({
   repository: () => ProductRepository,
@@ -13,6 +20,18 @@ export class Product extends BaseEntity {
   })
   docId: string;
 
+  @Property()
+  type: 'non-inventory' | 'inventory';
+
+  @Property()
+  vendorId: string;
+
+  @Property()
+  manufacturerId: string;
+
+  @Property()
+  storefrontPriceVisibility: 'members-only' | 'everyone';
+
   @Property({
     unique: true,
   })
@@ -21,17 +40,24 @@ export class Product extends BaseEntity {
   @Property()
   name: string;
 
-  @Property()
-  description: string;
+  @Property({
+    nullable: true,
+  })
+  shortDescription: string;
 
   @Property()
   manufacturerName: string;
 
-  @Property()
-  enhancedDescription: string;
+  @Property({
+    nullable: true,
+  })
+  description: string;
 
-  @OneToMany(() => ProductVariant, (productVariant) => productVariant.product)
-  variants = new Collection<ProductVariant>(this);
+  @Embedded(() => ProductVariant, { array: true, nullable: true })
+  variants: ProductVariant[] = [];
+
+  @Embedded(() => ProductOption, { array: true, nullable: true })
+  options: ProductOption[] = [];
 
   @Property({
     nullable: true,
@@ -43,13 +69,21 @@ export class Product extends BaseEntity {
     name: string,
     description: string,
     manufacturerName: string,
+    type: 'non-inventory' | 'inventory',
+    vendorId: string,
+    manufacturerId: string,
+    storefrontPriceVisibility: 'members-only' | 'everyone',
   ) {
     super();
     this.docId = nanoid();
     this.productId = productId;
     this.name = name;
-    this.description = description;
+    this.shortDescription = description;
     this.manufacturerName = manufacturerName;
+    this.type = type;
+    this.vendorId = vendorId;
+    this.manufacturerId = manufacturerId;
+    this.storefrontPriceVisibility = storefrontPriceVisibility;
   }
 
   setAsDeleted() {

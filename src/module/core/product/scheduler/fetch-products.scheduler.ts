@@ -12,6 +12,10 @@ import {
 } from '../queue/create-product.job';
 import { readFile } from 'fs/promises';
 import * as path from 'path';
+import {
+  ADD_DESCRIPTION_TO_PRODUCT_JOB_NAME,
+  AddDescriptionToProductJob,
+} from '../queue/add-description-to-product.job';
 
 @Injectable()
 export class FetchProductsScheduler {
@@ -22,19 +26,27 @@ export class FetchProductsScheduler {
 
   @Cron(CronExpression.EVERY_DAY_AT_10PM)
   async fetchDocuments() {
+    // TODO: Implement fetching documents from external source
     const buffer = await readFile(
       path.join(__dirname, '../../../../../sample-file.csv'),
     );
 
     const file = this.spreadsheetReader.read<FileRecord>(buffer);
 
-    const batches = splitArrayIntoBatches<FileRecord>(file, 1000);
+    const batches = splitArrayIntoBatches<FileRecord>(file, 100);
 
     for (const batch of batches) {
-      console.log('adding');
-      await this.queue.add(new CreateProductJob(batch));
+      await this.queue.add(
+        CREATE_PRODUCT_JOB_NAME,
+        new CreateProductJob(batch),
+      );
     }
 
-    console.log('all added');
+    for (const { ProductID } of batches[0].slice(0, 10)) {
+      await this.queue.add(
+        ADD_DESCRIPTION_TO_PRODUCT_JOB_NAME,
+        new AddDescriptionToProductJob(ProductID),
+      );
+    }
   }
 }

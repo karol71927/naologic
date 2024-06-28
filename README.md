@@ -1,73 +1,66 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Solution
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## My solution
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### Description
 
-## Description
+I have used:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- NestJS with Scheduler
+- Bull with Redis
+- MikroORM with MongoDB
+- LangChain with OpenAI
 
-## Installation
+![My solution](./docs/NAO%20-%20My%20solution.jpg)
 
-```bash
-$ npm install
+In simple solution documents will be fetched in a scheduler every 24 hours and then split into batches. Batches will go on bull queue, so the scheduler won't process whole file. It will be more efficient, when Node doesn't process file on a main thread. Because of that it is a showcase, I pushed 10 products on the same queue to process them after creating. In the last step I have used OpenAI to generate a description.
+
+Modules description:
+
+- core - this is core of my application, so there is a product module
+- generic - I can use this kind of module across application. I can use custom configuration every time those modules are imported
+- supporting - I haven't used this kind of module in this app, but it is not part of core business logic. For example this module could contain authentication logic
+
+### How to run it
+
+1. Add `.env` file
+
+```env
+DB_PORT=27017
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=naologic
+DB_HOST=naologic-mongo
+REDIS_PORT=6379
+REDIS_HOST=naologic-redis
+OPEN_AI_MAX_TOKENS= #number of tokens
+OPEN_AI_API_KEY= #your key
 ```
 
-## Running the app
+2. Run docker compose
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```sh
+docker compose up
 ```
 
-## Test
+3. If you want to run scheduler immediately then uncomment line 9 in file [main.ts](./src/main.ts)
 
-```bash
-# unit tests
-$ npm run test
+## Better solution
 
-# e2e tests
-$ npm run test:e2e
+This solution will involve some cloud services (GCP for example)
 
-# test coverage
-$ npm run test:cov
-```
+- cloud scheduler - this service is responsible for scheduling tasks
+- cloud functions - those functions are serverless, so when they are called it doesn't affect your app
 
-## Support
+![Better solution](./docs/NAO%20-%20Better%20solution.jpg)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Cloud function will fetch the file and split data into batches. Then it will call endpoint from the app. Probably there can be some kind of a load balancer for example on instance group. Load balancer will take the least used instance and this instance will process documents.
 
-## Stay in touch
+There will be two queues. First one will process products, so it will create and update products. Then it will push message on second queue which will add description enhanced by AI to documents.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+This solution is better, because it takes multi instance app into consideration. The first solution uses scheduler, so every instance of app will try to process documents.
 
-## License
+## Answers
 
-Nest is [MIT licensed](LICENSE).
+1. If I want to inform all vendors about product creation, update or deletion then I will use inbox outbox pattern. So firstly I will save event and inform everyone about the change and then I will save entity. For core of my application I want to use this pattern, because message will be delivered at least once.
+2. If deleted products have an order I will inform every module with event. Then other module probably will send an email with apologize that product is unavailable.

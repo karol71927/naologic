@@ -7,6 +7,7 @@ services:
       - 6379:6379
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+    container_name: naologic-redis
   mongo:
     image: mongo
     container_name: naologic-mongo
@@ -14,8 +15,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: naologic
     ports:
       - 27017:27017
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
   app:
     entrypoint: ['nest', 'start', '--debug', '0.0.0.0:9229', '--watch']
     container_name: naologic-api
